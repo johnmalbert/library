@@ -1,0 +1,13 @@
+{
+  "IsEncrypted": false,
+  "Values": {
+    "AzureWebJobsStorage": "",
+    "FUNCTIONS_WORKER_RUNTIME": "node",
+    "GOOGLE_CLIENT_EMAIL": "your-service-account@your-project.iam.gserviceaccount.com",
+    "GOOGLE_PRIVATE_KEY": "-----BEGIN PRIVATE KEY-----\nYOUR_PRIVATE_KEY_HERE\n-----END PRIVATE KEY-----",
+    "SHEET_ID": "your-google-sheet-id-here"
+  },
+  "Host": {
+    "CORS": "*"
+  }
+}

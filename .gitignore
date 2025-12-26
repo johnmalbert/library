@@ -1,0 +1,33 @@
+# Dependencies
+node_modules/
+package-lock.json
+
+# Azure Functions
+api/local.settings.json
+api/__blobstorage__/
+api/__queuestorage__/
+api/__azurite_db*__.json
+*.log
+
+# Vite/React
+web/dist/
+web/.vite/
+
+# Environment files
+.env
+.env.local
+.env.production
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Azure
+.azure/

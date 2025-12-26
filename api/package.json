@@ -1,0 +1,16 @@
+{
+  "name": "family-library-api",
+  "version": "1.0.0",
+  "description": "Azure Functions backend for Family Library",
+  "main": "src/index.js",
+  "scripts": {
+    "start": "func start"
+  },
+  "dependencies": {
+    "@azure/functions": "^4.10.0",
+    "googleapis": "^128.0.0"
+  },
+  "devDependencies": {
+    "azure-functions-core-tools": "^4.0.5530"
+  }
+}
