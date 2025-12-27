@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { getLocations } from './api';
+import noImage from './no-image-available.png';
 
 function CheckoutModal({ book, onClose, onSubmit }) {
   const [newLocation, setNewLocation] = useState('');
@@ -69,36 +70,20 @@ function CheckoutModal({ book, onClose, onSubmit }) {
           marginBottom: '20px',
           border: '2px solid #e0e0e0',
         }}>
-          {book.cover ? (
-            <img
-              src={book.cover}
-              alt={book.title}
-              style={{
-                width: '80px',
-                height: '120px',
-                objectFit: 'cover',
-                borderRadius: '4px',
-                flexShrink: 0,
-              }}
-            />
-          ) : (
-            <div style={{
+          <img
+            src={book.cover || noImage}
+            alt={book.title}
+            style={{
               width: '80px',
               height: '120px',
-              backgroundColor: '#e0e0e0',
+              objectFit: 'cover',
               borderRadius: '4px',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              fontSize: '12px',
-              color: '#666',
-              textAlign: 'center',
-              padding: '5px',
               flexShrink: 0,
-            }}>
-              No Image
-            </div>
-          )}
+            }}
+            onError={(e) => {
+              e.target.src = noImage;
+            }}
+          />
           <div style={{ flex: 1, minWidth: 0 }}>
             <h3 style={{ 
               margin: '0 0 8px 0', 

@@ -4,6 +4,7 @@ import BookList from './BookList';
 import CheckoutModal from './CheckoutModal';
 import AddBookModal from './AddBookModal';
 import { getBooks, checkoutBook } from './api';
+import logo from './logo.png';
 
 function App() {
   const [books, setBooks] = useState([]);
@@ -191,8 +192,9 @@ function App() {
       const query = searchQuery.toLowerCase();
       const title = (book.title || '').toLowerCase();
       const authors = (book.authors || '').toLowerCase();
+      const isbn = (book.isbn || '').toLowerCase();
       const location = (book.location || '').toLowerCase();
-      if (!title.includes(query) && !authors.includes(query) && !location.includes(query)) {
+      if (!title.includes(query) && !authors.includes(query) && !isbn.includes(query) && !location.includes(query)) {
         return false;
       }
     }
@@ -224,15 +226,36 @@ function App() {
   return (
     <div style={{ maxWidth: '1200px', margin: '0 auto', padding: '20px' }}>
       <header style={{ marginBottom: '30px' }}>
-        <div style={{ marginBottom: '15px' }}>
-          <h1 style={{ color: '#2c3e50', fontSize: 'clamp(1.5rem, 5vw, 2.5rem)', marginBottom: '8px', margin: 0 }}>Albert Children's Library</h1>
-          <p style={{ color: '#7f8c8d', fontSize: 'clamp(0.9rem, 3vw, 1.1rem)', margin: 0 }}>Discover and explore our collection of children's books</p>
+        <div style={{ marginBottom: '15px', textAlign: 'center' }}>
+          <img 
+            src={logo} 
+            alt="Albert Children's Library" 
+            style={{ 
+              maxWidth: '100%', 
+              height: 'auto', 
+              maxHeight: '120px',
+              marginBottom: '8px'
+            }} 
+          />
+          <p style={{ color: '#7f8c8d', fontSize: 'clamp(0.9rem, 3vw, 1.1rem)', margin: '0 0 20px 0' }}>Discover and explore our collection of children's books</p>
         </div>
-        <div style={{ display: 'flex', gap: '10px', flexWrap: 'wrap', marginBottom: '10px' }}>
+        
+        {/* Action buttons - centered and responsive */}
+        <div style={{ 
+          display: 'flex', 
+          gap: '12px', 
+          justifyContent: 'center',
+          flexWrap: 'wrap',
+          marginBottom: '10px',
+          maxWidth: '600px',
+          margin: '0 auto 20px auto'
+        }}>
           <button
             onClick={() => startCheckoutScanning()}
             style={{
-              padding: '12px 24px',
+              flex: '1 1 200px',
+              minWidth: '200px',
+              padding: '14px 24px',
               backgroundColor: '#007bff',
               color: 'white',
               border: 'none',
@@ -240,19 +263,33 @@ function App() {
               cursor: 'pointer',
               fontSize: '16px',
               fontWeight: 'bold',
-              boxShadow: '0 2px 4px rgba(0,0,0,0.1)',
-              transition: 'background-color 0.2s',
-              whiteSpace: 'nowrap',
+              boxShadow: '0 2px 8px rgba(0,123,255,0.3)',
+              transition: 'all 0.2s',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              gap: '8px',
             }}
-            onMouseOver={(e) => e.target.style.backgroundColor = '#0056b3'}
-            onMouseOut={(e) => e.target.style.backgroundColor = '#007bff'}
+            onMouseOver={(e) => {
+              e.target.style.backgroundColor = '#0056b3';
+              e.target.style.transform = 'translateY(-2px)';
+              e.target.style.boxShadow = '0 4px 12px rgba(0,123,255,0.4)';
+            }}
+            onMouseOut={(e) => {
+              e.target.style.backgroundColor = '#007bff';
+              e.target.style.transform = 'translateY(0)';
+              e.target.style.boxShadow = '0 2px 8px rgba(0,123,255,0.3)';
+            }}
           >
-            📷 Scan to Move
+            <span style={{ fontSize: '20px' }}>📷</span>
+            <span>Scan to Move</span>
           </button>
           <button
             onClick={() => setShowAddBook(true)}
             style={{
-              padding: '12px 24px',
+              flex: '1 1 200px',
+              minWidth: '200px',
+              padding: '14px 24px',
               backgroundColor: '#28a745',
               color: 'white',
               border: 'none',
@@ -260,21 +297,33 @@ function App() {
               cursor: 'pointer',
               fontSize: '16px',
               fontWeight: 'bold',
-              boxShadow: '0 2px 4px rgba(0,0,0,0.1)',
-              transition: 'background-color 0.2s',
-              whiteSpace: 'nowrap',
+              boxShadow: '0 2px 8px rgba(40,167,69,0.3)',
+              transition: 'all 0.2s',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              gap: '8px',
             }}
-            onMouseOver={(e) => e.target.style.backgroundColor = '#218838'}
-            onMouseOut={(e) => e.target.style.backgroundColor = '#28a745'}
+            onMouseOver={(e) => {
+              e.target.style.backgroundColor = '#218838';
+              e.target.style.transform = 'translateY(-2px)';
+              e.target.style.boxShadow = '0 4px 12px rgba(40,167,69,0.4)';
+            }}
+            onMouseOut={(e) => {
+              e.target.style.backgroundColor = '#28a745';
+              e.target.style.transform = 'translateY(0)';
+              e.target.style.boxShadow = '0 2px 8px rgba(40,167,69,0.3)';
+            }}
           >
-            + Add New Book
+            <span style={{ fontSize: '20px' }}>➕</span>
+            <span>Add New Book</span>
           </button>
         </div>
         
         <div style={{ marginTop: '20px' }}>
           <input
             type="text"
-            placeholder="Search by title, author, or location..."
+            placeholder="Search by title, author, ISBN, or location..."
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
             style={{

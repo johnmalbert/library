@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { BrowserMultiFormatReader } from '@zxing/library';
 import { lookupBook, addBook, getLocations } from './api';
+import noImage from './no-image-available.png';
 
 function AddBookModal({ onClose, onSuccess }) {
   const [isbn, setIsbn] = useState('');
@@ -304,18 +305,19 @@ function AddBookModal({ onClose, onSuccess }) {
               marginBottom: '15px',
             }}>
               <div style={{ display: 'flex', gap: '15px', marginBottom: '10px' }}>
-                {bookInfo.cover && (
-                  <img
-                    src={bookInfo.cover}
-                    alt={bookInfo.title}
-                    style={{
-                      width: '80px',
-                      height: '120px',
-                      objectFit: 'cover',
-                      borderRadius: '4px',
-                    }}
-                  />
-                )}
+                <img
+                  src={bookInfo.cover || noImage}
+                  alt={bookInfo.title}
+                  style={{
+                    width: '80px',
+                    height: '120px',
+                    objectFit: 'cover',
+                    borderRadius: '4px',
+                  }}
+                  onError={(e) => {
+                    e.target.src = noImage;
+                  }}
+                />
                 <div style={{ flex: 1 }}>
                   <h3 style={{ margin: '0 0 5px 0', fontSize: '16px' }}>{bookInfo.title}</h3>
                   <p style={{ margin: '0 0 5px 0', fontSize: '14px', color: '#666' }}>

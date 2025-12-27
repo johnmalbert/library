@@ -1,4 +1,5 @@
 import React from 'react';
+import noImage from './no-image-available.png';
 
 function BookCard({ book, onCheckoutClick }) {
   return (
@@ -20,25 +21,18 @@ function BookCard({ book, onCheckoutClick }) {
         justifyContent: 'center',
         overflow: 'hidden',
       }}>
-        {book.cover ? (
-          <img
-            src={book.cover}
-            alt={book.title}
-            style={{
-              width: '100%',
-              height: '100%',
-              objectFit: 'contain',
-            }}
-            onError={(e) => {
-              e.target.style.display = 'none';
-              e.target.parentElement.innerHTML = '<div style="color: #999; font-size: 14px; text-align: center;">No Image Available</div>';
-            }}
-          />
-        ) : (
-          <div style={{ color: '#999', fontSize: '14px', textAlign: 'center' }}>
-            No Image Available
-          </div>
-        )}
+        <img
+          src={book.cover || noImage}
+          alt={book.title}
+          style={{
+            width: '100%',
+            height: '100%',
+            objectFit: 'contain',
+          }}
+          onError={(e) => {
+            e.target.src = noImage;
+          }}
+        />
       </div>
       
       <h3 style={{ 
