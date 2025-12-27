@@ -53,14 +53,80 @@ function CheckoutModal({ book, onClose, onSubmit }) {
         backgroundColor: 'white',
         padding: '30px',
         borderRadius: '8px',
-        maxWidth: '400px',
+        maxWidth: '500px',
         width: '90%',
         boxShadow: '0 4px 6px rgba(0, 0, 0, 0.1)',
       }}>
-        <h2 style={{ marginTop: 0 }}>Move / Check Out</h2>
-        <p style={{ color: '#666', marginBottom: '20px' }}>
-          <strong>{book.title}</strong> by {book.authors}
-        </p>
+        <h2 style={{ marginTop: 0, marginBottom: '20px' }}>Move Book to New Location</h2>
+        
+        {/* Book Card Display */}
+        <div style={{
+          display: 'flex',
+          gap: '15px',
+          padding: '15px',
+          backgroundColor: '#f8f9fa',
+          borderRadius: '8px',
+          marginBottom: '20px',
+          border: '2px solid #e0e0e0',
+        }}>
+          {book.cover ? (
+            <img
+              src={book.cover}
+              alt={book.title}
+              style={{
+                width: '80px',
+                height: '120px',
+                objectFit: 'cover',
+                borderRadius: '4px',
+                flexShrink: 0,
+              }}
+            />
+          ) : (
+            <div style={{
+              width: '80px',
+              height: '120px',
+              backgroundColor: '#e0e0e0',
+              borderRadius: '4px',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              fontSize: '12px',
+              color: '#666',
+              textAlign: 'center',
+              padding: '5px',
+              flexShrink: 0,
+            }}>
+              No Image
+            </div>
+          )}
+          <div style={{ flex: 1, minWidth: 0 }}>
+            <h3 style={{ 
+              margin: '0 0 8px 0', 
+              fontSize: '16px',
+              fontWeight: 'bold',
+              color: '#2c3e50',
+            }}>
+              {book.title || 'Unknown Title'}
+            </h3>
+            <p style={{ margin: '0 0 5px 0', fontSize: '14px', color: '#666' }}>
+              <strong>Author:</strong> {book.authors || 'Unknown'}
+            </p>
+            <p style={{ margin: '0 0 5px 0', fontSize: '14px', color: '#666' }}>
+              <strong>ISBN:</strong> {book.isbn}
+            </p>
+            <p style={{ 
+              margin: '5px 0 0 0', 
+              fontSize: '14px', 
+              padding: '6px 10px',
+              backgroundColor: '#fff3cd',
+              border: '1px solid #ffc107',
+              borderRadius: '4px',
+              fontWeight: 'bold',
+            }}>
+              Current: {book.location || 'Not set'}
+            </p>
+          </div>
+        </div>
 
         <form onSubmit={handleSubmit}>
           <div style={{ marginBottom: '15px' }}>

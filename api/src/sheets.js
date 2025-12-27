@@ -37,13 +37,23 @@ async function readSheet(sheetName) {
     }
 
     const headers = rows[0];
-    const data = rows.slice(1).map(row => {
-      const obj = {};
-      headers.forEach((header, index) => {
-        obj[header] = row[index] || '';
+    const data = rows.slice(1)
+      .filter(row => {
+        // Filter out completely empty rows
+        return row && row.some(cell => cell && cell.toString().trim() !== '');
+      })
+      .map(row => {
+        const obj = {};
+        headers.forEach((header, index) => {
+          obj[header] = row[index] || '';
+        });
+        return obj;
+      })
+      // Filter out rows with no ISBN (primary key)
+      .filter(book => {
+        const isbn = (book.ISBN || book.isbn || '').toString().trim();
+        return isbn !== '';
       });
-      return obj;
-    });
 
     return data;
   } catch (error) {
@@ -66,12 +76,18 @@ async function updateLocation(isbn, location) {
   const spreadsheetId = process.env.SHEET_ID;
   const sheetName = 'Inventory';
 
+  // Normalize the ISBN for comparison
+  const normalizedIsbn = isbn.toString().trim();
+
   // Read inventory to find the book
   const inventory = await readSheet(sheetName);
-  const bookIndex = inventory.findIndex(book => (book.ISBN || book.isbn) === isbn);
+  const bookIndex = inventory.findIndex(book => {
+    const bookIsbn = (book.ISBN || book.isbn || '').toString().trim();
+    return bookIsbn === normalizedIsbn;
+  });
 
   if (bookIndex === -1) {
-    throw new Error(`Book with ISBN ${isbn} not found`);
+    throw new Error(`Book with ISBN ${normalizedIsbn} not found`);
   }
 
   // Update the Location column (column F, 6th column)
@@ -156,12 +172,22 @@ async function addBook(bookData) {
   const spreadsheetId = process.env.SHEET_ID;
   const sheetName = 'Inventory';
 
+  // Normalize ISBN for comparison
+  const normalizedIsbn = (bookData.isbn || '').toString().trim();
+  
+  if (!normalizedIsbn) {
+    throw new Error('ISBN is required');
+  }
+
   // Check if book already exists
   const inventory = await readSheet(sheetName);
-  const exists = inventory.some(book => (book.ISBN || book.isbn) === bookData.isbn);
+  const exists = inventory.some(book => {
+    const existingIsbn = (book.ISBN || book.isbn || '').toString().trim();
+    return existingIsbn === normalizedIsbn;
+  });
   
   if (exists) {
-    throw new Error('Book with this ISBN already exists in the library');
+    throw new Error(`Book with ISBN ${normalizedIsbn} already exists in the library`);
   }
 
   // Create row in the order: ISBN, Cover, Title, Authors, Reading Level, Location, Publishers, Pages, Genres, Language, Notes

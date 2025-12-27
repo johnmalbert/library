@@ -1,4 +1,5 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
+import { BrowserMultiFormatReader } from '@zxing/library';
 import { lookupBook, addBook, getLocations } from './api';
 
 function AddBookModal({ onClose, onSuccess }) {
@@ -12,6 +13,9 @@ function AddBookModal({ onClose, onSuccess }) {
   const [lookingUp, setLookingUp] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState('');
+  const [scanning, setScanning] = useState(false);
+  const videoRef = useRef(null);
+  const codeReaderRef = useRef(null);
 
   useEffect(() => {
     async function fetchLocations() {
@@ -27,8 +31,70 @@ function AddBookModal({ onClose, onSuccess }) {
     fetchLocations();
   }, []);
 
-  async function handleLookup() {
-    if (!isbn.trim()) {
+  useEffect(() => {
+    // Cleanup barcode reader on unmount
+    return () => {
+      stopScanning();
+    };
+  }, []);
+
+  async function startScanning() {
+    setScanning(true);
+    setError('');
+    
+    try {
+      const codeReader = new BrowserMultiFormatReader();
+      codeReaderRef.current = codeReader;
+      
+      const videoInputDevices = await codeReader.listVideoInputDevices();
+      if (videoInputDevices.length === 0) {
+        setError('No camera found on this device');
+        setScanning(false);
+        return;
+      }
+
+      // Prefer back camera on mobile
+      const selectedDevice = videoInputDevices.find(device => 
+        device.label.toLowerCase().includes('back')
+      ) || videoInputDevices[0];
+
+      await codeReader.decodeFromVideoDevice(
+        selectedDevice.deviceId,
+        videoRef.current,
+        (result, error) => {
+          if (result) {
+            const scannedText = result.getText();
+            // ISBN can be 10 or 13 digits
+            if (/^\d{10}(\d{3})?$/.test(scannedText)) {
+              setIsbn(scannedText);
+              setError('');
+              stopScanning();
+              // Auto-lookup after scanning
+              setTimeout(() => {
+                handleLookupWithIsbn(scannedText);
+              }, 100);
+            }
+          }
+        }
+      );
+    } catch (err) {
+      console.error('Error starting scanner:', err);
+      setError('Failed to start camera. Please check permissions.');
+      setScanning(false);
+    }
+  }
+
+  function stopScanning() {
+    if (codeReaderRef.current) {
+      codeReaderRef.current.reset();
+      codeReaderRef.current = null;
+    }
+    setScanning(false);
+  }
+
+  async function handleLookupWithIsbn(isbnValue) {
+    const isbnToLookup = isbnValue || isbn;
+    if (!isbnToLookup.trim()) {
       setError('Please enter an ISBN');
       return;
     }
@@ -36,7 +102,7 @@ function AddBookModal({ onClose, onSuccess }) {
     setError('');
     setLookingUp(true);
     try {
-      const data = await lookupBook(isbn.trim());
+      const data = await lookupBook(isbnToLookup.trim());
       setBookInfo(data);
     } catch (err) {
       setError(err.message);
@@ -44,6 +110,10 @@ function AddBookModal({ onClose, onSuccess }) {
     } finally {
       setLookingUp(false);
     }
+  }
+
+  async function handleLookup() {
+    await handleLookupWithIsbn();
   }
 
   async function handleSubmit(e) {
@@ -129,42 +199,100 @@ function AddBookModal({ onClose, onSuccess }) {
             <label style={{ display: 'block', marginBottom: '5px', fontWeight: 'bold' }}>
               ISBN: *
             </label>
-            <div style={{ display: 'flex', gap: '10px' }}>
-              <input
-                type="text"
-                value={isbn}
-                onChange={(e) => setIsbn(e.target.value)}
-                onKeyPress={(e) => e.key === 'Enter' && (e.preventDefault(), handleLookup())}
-                placeholder="Enter ISBN..."
-                disabled={bookInfo !== null}
-                style={{
-                  flex: 1,
-                  padding: '8px',
-                  border: '1px solid #ddd',
-                  borderRadius: '4px',
-                  fontSize: '14px',
-                  boxSizing: 'border-box',
-                }}
-              />
-              <button
-                type="button"
-                onClick={handleLookup}
-                disabled={lookingUp || bookInfo !== null}
-                style={{
-                  padding: '8px 16px',
-                  backgroundColor: '#007bff',
-                  color: 'white',
-                  border: 'none',
-                  borderRadius: '4px',
-                  cursor: (lookingUp || bookInfo) ? 'not-allowed' : 'pointer',
-                  fontSize: '14px',
-                  whiteSpace: 'nowrap',
-                  opacity: (lookingUp || bookInfo) ? 0.6 : 1,
-                }}
-              >
-                {lookingUp ? 'Looking up...' : 'Lookup'}
-              </button>
-            </div>
+            
+            {scanning ? (
+              <div style={{ marginBottom: '10px' }}>
+                <video
+                  ref={videoRef}
+                  style={{
+                    width: '100%',
+                    maxHeight: '300px',
+                    borderRadius: '8px',
+                    backgroundColor: '#000',
+                  }}
+                />
+                <div style={{ marginTop: '10px', textAlign: 'center' }}>
+                  <p style={{ fontSize: '14px', color: '#666', marginBottom: '10px' }}>
+                    Point camera at ISBN barcode
+                  </p>
+                  <button
+                    type="button"
+                    onClick={stopScanning}
+                    style={{
+                      padding: '8px 16px',
+                      backgroundColor: '#6c757d',
+                      color: 'white',
+                      border: 'none',
+                      borderRadius: '4px',
+                      cursor: 'pointer',
+                      fontSize: '14px',
+                    }}
+                  >
+                    Cancel Scan
+                  </button>
+                </div>
+              </div>
+            ) : (
+              <>
+                <div style={{ display: 'flex', gap: '10px', marginBottom: '10px' }}>
+                  <input
+                    type="text"
+                    value={isbn}
+                    onChange={(e) => setIsbn(e.target.value)}
+                    onKeyPress={(e) => e.key === 'Enter' && (e.preventDefault(), handleLookup())}
+                    placeholder="Enter ISBN..."
+                    disabled={bookInfo !== null}
+                    style={{
+                      flex: 1,
+                      padding: '8px',
+                      border: '1px solid #ddd',
+                      borderRadius: '4px',
+                      fontSize: '14px',
+                      boxSizing: 'border-box',
+                    }}
+                  />
+                  <button
+                    type="button"
+                    onClick={handleLookup}
+                    disabled={lookingUp || bookInfo !== null}
+                    style={{
+                      padding: '8px 16px',
+                      backgroundColor: '#007bff',
+                      color: 'white',
+                      border: 'none',
+                      borderRadius: '4px',
+                      cursor: (lookingUp || bookInfo) ? 'not-allowed' : 'pointer',
+                      fontSize: '14px',
+                      whiteSpace: 'nowrap',
+                      opacity: (lookingUp || bookInfo) ? 0.6 : 1,
+                    }}
+                  >
+                    {lookingUp ? 'Looking up...' : 'Lookup'}
+                  </button>
+                </div>
+                {!bookInfo && (
+                  <button
+                    type="button"
+                    onClick={startScanning}
+                    disabled={lookingUp}
+                    style={{
+                      width: '100%',
+                      padding: '10px',
+                      backgroundColor: '#28a745',
+                      color: 'white',
+                      border: 'none',
+                      borderRadius: '4px',
+                      cursor: lookingUp ? 'not-allowed' : 'pointer',
+                      fontSize: '14px',
+                      fontWeight: 'bold',
+                      opacity: lookingUp ? 0.6 : 1,
+                    }}
+                  >
+                    📷 Scan Barcode
+                  </button>
+                )}
+              </>
+            )}
           </div>
 
           {/* Book Information Display */}

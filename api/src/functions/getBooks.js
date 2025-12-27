@@ -12,7 +12,7 @@ app.http('getBooks', {
 
       // Map inventory to book objects
       const books = inventory.map(book => {
-        const isbnKey = book.ISBN || book.isbn;
+        const isbnKey = (book.ISBN || book.isbn || '').toString().trim();
 
         // Extract URL from IMAGE formula if present
         let coverUrl = book.Cover || book.cover || '';
@@ -25,16 +25,16 @@ app.http('getBooks', {
 
         return {
           isbn: isbnKey,
-          title: book.Title || book.title,
-          authors: book.Authors || book.author,
-          readingLevel: book['Reading Level'] || book.level,
+          title: (book.Title || book.title || '').trim(),
+          authors: (book.Authors || book.author || '').trim(),
+          readingLevel: (book['Reading Level'] || book.level || '').trim(),
           cover: coverUrl,
-          publishers: book.Publishers || '',
-          pages: book.Pages || '',
-          genres: book.Genres || '',
-          language: book.Language || '',
-          notes: book.Notes || '',
-          location: book.Location || '',
+          publishers: (book.Publishers || '').trim(),
+          pages: (book.Pages || '').toString().trim(),
+          genres: (book.Genres || '').trim(),
+          language: (book.Language || '').trim(),
+          notes: (book.Notes || '').trim(),
+          location: (book.Location || '').trim(),
         };
       });
 
