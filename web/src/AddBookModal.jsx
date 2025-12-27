@@ -178,7 +178,7 @@ function AddBookModal({ onClose, onSuccess }) {
         boxShadow: '0 4px 6px rgba(0, 0, 0, 0.1)',
         margin: '20px',
       }}>
-        <h2 style={{ marginTop: 0 }}>Add New Book</h2>
+        <h2 style={{ marginTop: 0 }}>Add Library Book</h2>
 
         {error && (
           <div style={{
@@ -240,7 +240,7 @@ function AddBookModal({ onClose, onSuccess }) {
                     value={isbn}
                     onChange={(e) => setIsbn(e.target.value)}
                     onKeyPress={(e) => e.key === 'Enter' && (e.preventDefault(), handleLookup())}
-                    placeholder="Enter ISBN..."
+                    placeholder="e.g. 9780143127741"
                     disabled={bookInfo !== null}
                     style={{
                       flex: 1,

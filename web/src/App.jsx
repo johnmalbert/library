@@ -13,6 +13,9 @@ function App() {
   const [showAddBook, setShowAddBook] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedNotesFilters, setSelectedNotesFilters] = useState([]);
+  const [selectedLocationFilters, setSelectedLocationFilters] = useState([]);
+  const [showNotesFilter, setShowNotesFilter] = useState(false);
+  const [showLocationFilter, setShowLocationFilter] = useState(false);
   const [showScrollTop, setShowScrollTop] = useState(false);
   const [scanningCheckout, setScanningCheckout] = useState(false);
   const [scanError, setScanError] = useState('');
@@ -151,6 +154,18 @@ function App() {
     return Array.from(notesSet).sort();
   }, [books]);
 
+  // Get unique locations for filter options
+  const uniqueLocations = React.useMemo(() => {
+    const locationSet = new Set();
+    books.forEach(book => {
+      const location = (book.location || '').trim();
+      if (location) {
+        locationSet.add(location);
+      }
+    });
+    return Array.from(locationSet).sort();
+  }, [books]);
+
   // Toggle notes filter selection
   const toggleNotesFilter = (notesValue) => {
     setSelectedNotesFilters(prev => 
@@ -160,14 +175,24 @@ function App() {
     );
   };
 
-  // Filter books based on search query and notes filters
+  // Toggle location filter selection
+  const toggleLocationFilter = (locationValue) => {
+    setSelectedLocationFilters(prev => 
+      prev.includes(locationValue)
+        ? prev.filter(v => v !== locationValue)
+        : [...prev, locationValue]
+    );
+  };
+
+  // Filter books based on search query, notes filters, and location filters
   const filteredBooks = books.filter(book => {
     // Search filter
     if (searchQuery) {
       const query = searchQuery.toLowerCase();
       const title = (book.title || '').toLowerCase();
+      const authors = (book.authors || '').toLowerCase();
       const location = (book.location || '').toLowerCase();
-      if (!title.includes(query) && !location.includes(query)) {
+      if (!title.includes(query) && !authors.includes(query) && !location.includes(query)) {
         return false;
       }
     }
@@ -176,6 +201,14 @@ function App() {
     if (selectedNotesFilters.length > 0) {
       const bookNotes = (book.notes || '').trim();
       if (!selectedNotesFilters.includes(bookNotes)) {
+        return false;
+      }
+    }
+
+    // Location filter
+    if (selectedLocationFilters.length > 0) {
+      const bookLocation = (book.location || '').trim();
+      if (!selectedLocationFilters.includes(bookLocation)) {
         return false;
       }
     }
@@ -234,14 +267,14 @@ function App() {
             onMouseOver={(e) => e.target.style.backgroundColor = '#218838'}
             onMouseOut={(e) => e.target.style.backgroundColor = '#28a745'}
           >
-            + Add Book
+            + Add New Book
           </button>
         </div>
         
         <div style={{ marginTop: '20px' }}>
           <input
             type="text"
-            placeholder="Search by title or location..."
+            placeholder="Search by title, author, or location..."
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
             style={{
@@ -261,57 +294,169 @@ function App() {
 
         {uniqueNotes.length > 0 && (
           <div style={{ marginTop: '15px' }}>
-            <label style={{ display: 'block', fontSize: '14px', fontWeight: '500', color: '#555', marginBottom: '8px' }}>
-              Filter by Reading Level:
-            </label>
-            <div style={{ display: 'flex', gap: '15px', flexWrap: 'wrap' }}>
-              {uniqueNotes.map(notesValue => (
-                <label
-                  key={notesValue}
-                  style={{
-                    display: 'flex',
-                    alignItems: 'center',
-                    gap: '6px',
-                    cursor: 'pointer',
-                    padding: '8px 12px',
-                    border: '2px solid #ddd',
-                    borderRadius: '6px',
-                    backgroundColor: selectedNotesFilters.includes(notesValue) ? '#e7f3ff' : 'white',
-                    borderColor: selectedNotesFilters.includes(notesValue) ? '#007bff' : '#ddd',
-                    transition: 'all 0.2s',
-                  }}
-                >
-                  <input
-                    type="checkbox"
-                    checked={selectedNotesFilters.includes(notesValue)}
-                    onChange={() => toggleNotesFilter(notesValue)}
-                    style={{ cursor: 'pointer' }}
-                  />
-                  <span style={{ fontSize: '14px', color: '#333' }}>{notesValue}</span>
-                </label>
-              ))}
+            <div
+              onClick={() => setShowNotesFilter(!showNotesFilter)}
+              style={{
+                display: 'flex',
+                alignItems: 'center',
+                gap: '8px',
+                cursor: 'pointer',
+                padding: '10px 12px',
+                backgroundColor: '#f8f9fa',
+                borderRadius: '6px',
+                border: '1px solid #ddd',
+                marginBottom: showNotesFilter ? '12px' : '0',
+                transition: 'background-color 0.2s',
+              }}
+              onMouseOver={(e) => e.currentTarget.style.backgroundColor = '#e9ecef'}
+              onMouseOut={(e) => e.currentTarget.style.backgroundColor = '#f8f9fa'}
+            >
+              <span style={{ fontSize: '18px', fontWeight: 'bold', color: '#007bff' }}>
+                {showNotesFilter ? '▼' : '▶'}
+              </span>
+              <label style={{ fontSize: '14px', fontWeight: '500', color: '#555', margin: 0, cursor: 'pointer' }}>
+                Filter by Reading Level
+                {selectedNotesFilters.length > 0 && (
+                  <span style={{ marginLeft: '8px', fontSize: '12px', color: '#007bff', fontWeight: 'bold' }}>
+                    ({selectedNotesFilters.length} selected)
+                  </span>
+                )}
+              </label>
             </div>
-            {selectedNotesFilters.length > 0 && (
-              <button
-                onClick={() => setSelectedNotesFilters([])}
-                style={{
-                  marginTop: '10px',
-                  padding: '6px 12px',
-                  fontSize: '13px',
-                  backgroundColor: '#f8f9fa',
-                  border: '1px solid #ddd',
-                  borderRadius: '4px',
-                  cursor: 'pointer',
-                  color: '#666',
-                }}
-              >
-                Clear Filters
-              </button>
+            {showNotesFilter && (
+              <>
+                <div style={{ display: 'flex', gap: '15px', flexWrap: 'wrap' }}>
+                  {uniqueNotes.map(notesValue => (
+                    <label
+                      key={notesValue}
+                      style={{
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: '6px',
+                        cursor: 'pointer',
+                        padding: '8px 12px',
+                        border: '2px solid #ddd',
+                        borderRadius: '6px',
+                        backgroundColor: selectedNotesFilters.includes(notesValue) ? '#e7f3ff' : 'white',
+                        borderColor: selectedNotesFilters.includes(notesValue) ? '#007bff' : '#ddd',
+                        transition: 'all 0.2s',
+                      }}
+                    >
+                      <input
+                        type="checkbox"
+                        checked={selectedNotesFilters.includes(notesValue)}
+                        onChange={() => toggleNotesFilter(notesValue)}
+                        style={{ cursor: 'pointer' }}
+                      />
+                      <span style={{ fontSize: '14px', color: '#333' }}>{notesValue}</span>
+                    </label>
+                  ))}
+                </div>
+                {selectedNotesFilters.length > 0 && (
+                  <button
+                    onClick={() => setSelectedNotesFilters([])}
+                    style={{
+                      marginTop: '10px',
+                      padding: '6px 12px',
+                      fontSize: '13px',
+                      backgroundColor: '#f8f9fa',
+                      border: '1px solid #ddd',
+                      borderRadius: '4px',
+                      cursor: 'pointer',
+                      color: '#666',
+                    }}
+                  >
+                    Clear Reading Level Filters
+                  </button>
+                )}
+              </>
             )}
           </div>
         )}
 
-        {(searchQuery || selectedNotesFilters.length > 0) && (
+        {uniqueLocations.length > 0 && (
+          <div style={{ marginTop: '15px' }}>
+            <div
+              onClick={() => setShowLocationFilter(!showLocationFilter)}
+              style={{
+                display: 'flex',
+                alignItems: 'center',
+                gap: '8px',
+                cursor: 'pointer',
+                padding: '10px 12px',
+                backgroundColor: '#f8f9fa',
+                borderRadius: '6px',
+                border: '1px solid #ddd',
+                marginBottom: showLocationFilter ? '12px' : '0',
+                transition: 'background-color 0.2s',
+              }}
+              onMouseOver={(e) => e.currentTarget.style.backgroundColor = '#e9ecef'}
+              onMouseOut={(e) => e.currentTarget.style.backgroundColor = '#f8f9fa'}
+            >
+              <span style={{ fontSize: '18px', fontWeight: 'bold', color: '#ff9800' }}>
+                {showLocationFilter ? '▼' : '▶'}
+              </span>
+              <label style={{ fontSize: '14px', fontWeight: '500', color: '#555', margin: 0, cursor: 'pointer' }}>
+                Filter by Location
+                {selectedLocationFilters.length > 0 && (
+                  <span style={{ marginLeft: '8px', fontSize: '12px', color: '#ff9800', fontWeight: 'bold' }}>
+                    ({selectedLocationFilters.length} selected)
+                  </span>
+                )}
+              </label>
+            </div>
+            {showLocationFilter && (
+              <>
+                <div style={{ display: 'flex', gap: '15px', flexWrap: 'wrap' }}>
+                  {uniqueLocations.map(locationValue => (
+                    <label
+                      key={locationValue}
+                      style={{
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: '6px',
+                        cursor: 'pointer',
+                        padding: '8px 12px',
+                        border: '2px solid #ddd',
+                        borderRadius: '6px',
+                        backgroundColor: selectedLocationFilters.includes(locationValue) ? '#fff3e0' : 'white',
+                        borderColor: selectedLocationFilters.includes(locationValue) ? '#ff9800' : '#ddd',
+                        transition: 'all 0.2s',
+                      }}
+                    >
+                      <input
+                        type="checkbox"
+                        checked={selectedLocationFilters.includes(locationValue)}
+                        onChange={() => toggleLocationFilter(locationValue)}
+                        style={{ cursor: 'pointer' }}
+                      />
+                      <span style={{ fontSize: '14px', color: '#333' }}>{locationValue}</span>
+                    </label>
+                  ))}
+                </div>
+                {selectedLocationFilters.length > 0 && (
+                  <button
+                    onClick={() => setSelectedLocationFilters([])}
+                    style={{
+                      marginTop: '10px',
+                      padding: '6px 12px',
+                      fontSize: '13px',
+                      backgroundColor: '#f8f9fa',
+                      border: '1px solid #ddd',
+                      borderRadius: '4px',
+                      cursor: 'pointer',
+                      color: '#666',
+                    }}
+                  >
+                    Clear Location Filters
+                  </button>
+                )}
+              </>
+            )}
+          </div>
+        )}
+
+        {(searchQuery || selectedNotesFilters.length > 0 || selectedLocationFilters.length > 0) && (
           <p style={{ marginTop: '10px', fontSize: '14px', color: '#666' }}>
             Found {filteredBooks.length} book{filteredBooks.length !== 1 ? 's' : ''}
           </p>

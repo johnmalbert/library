@@ -58,7 +58,7 @@ function BookCard({ book, onCheckoutClick }) {
       </p>
       
       <p style={{ fontSize: '12px', color: '#888', margin: '5px 0' }}>
-        Level: {book.readingLevel || 'Not specified'}
+        Notes: {book.notes || 'Not specified'}
       </p>
       
       <p style={{ fontSize: '12px', color: '#888', margin: '5px 0' }}>
