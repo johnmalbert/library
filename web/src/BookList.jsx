@@ -1,7 +1,7 @@
 import React from 'react';
 import BookCard from './BookCard';
 
-function BookList({ books, onCheckoutClick }) {
+function BookList({ books, onCheckoutClick, onRequestClick }) {
   if (books.length === 0) {
     return <p>No books found in the library.</p>;
   }
@@ -17,6 +17,7 @@ function BookList({ books, onCheckoutClick }) {
           key={book.isbn}
           book={book}
           onCheckoutClick={onCheckoutClick}
+          onRequestClick={onRequestClick}
         />
       ))}
     </div>

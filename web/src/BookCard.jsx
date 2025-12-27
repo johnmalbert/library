@@ -1,7 +1,7 @@
 import React from 'react';
 import noImage from './no-image-available.png';
 
-function BookCard({ book, onCheckoutClick }) {
+function BookCard({ book, onCheckoutClick, onRequestClick }) {
   return (
     <div style={{
       border: '1px solid #ddd',
@@ -47,7 +47,7 @@ function BookCard({ book, onCheckoutClick }) {
       }}>
         {book.title}
       </h3>
-      <p style={{ color: '#666', fontSize: '14px', margin: '5px 0' }}>
+      <p style={{ color: '#666', fontSize: '14px', margin: '5px 0', height: '40px', overflow: 'hidden', display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical' }}>
         by {book.authors || 'Author unavailable'}
       </p>
       
@@ -69,8 +69,15 @@ function BookCard({ book, onCheckoutClick }) {
         backgroundColor: '#f5f5f5',
         borderRadius: '4px',
         fontSize: '13px',
+        height: '60px',
+        overflow: 'hidden',
       }}>
         <strong>Location:</strong> {book.location || 'Not set'}
+        {book.requestedBy && (
+          <div style={{ marginTop: '5px', color: '#d9534f', fontWeight: 'bold' }}>
+            Requested by: {book.requestedBy}
+          </div>
+        )}
       </div>
       
       <button
@@ -90,6 +97,25 @@ function BookCard({ book, onCheckoutClick }) {
         onMouseOut={(e) => e.target.style.backgroundColor = '#007bff'}
       >
         Move / Check Out
+      </button>
+      
+      <button
+        onClick={() => onRequestClick(book)}
+        style={{
+          marginTop: '8px',
+          width: '100%',
+          padding: '8px',
+          backgroundColor: '#5cb85c',
+          color: 'white',
+          border: 'none',
+          borderRadius: '4px',
+          cursor: 'pointer',
+          fontSize: '14px',
+        }}
+        onMouseOver={(e) => e.target.style.backgroundColor = '#449d44'}
+        onMouseOut={(e) => e.target.style.backgroundColor = '#5cb85c'}
+      >
+        Request Book
       </button>
     </div>
   );

@@ -6,6 +6,7 @@ require('./functions/checkoutBook');
 require('./functions/getLocations');
 require('./functions/lookupBook');
 require('./functions/addBook');
+require('./functions/requestBook');
 
 // Export for Azure Functions
 module.exports = app;

@@ -68,6 +68,7 @@ async function readSheet(sheetName) {
 
 /**
  * Updates the location for a book in the Inventory sheet
+ * Also clears the RequestedBy column when moving
  * @param {string} isbn - Book ISBN
  * @param {string} location - New location
  */
@@ -90,14 +91,22 @@ async function updateLocation(isbn, location) {
     throw new Error(`Book with ISBN ${normalizedIsbn} not found`);
   }
 
-  // Update the Location column (column F, 6th column)
+  // Update the Location column (column F) and clear RequestedBy column (column L)
   const rowNumber = bookIndex + 2; // +2 because row 1 is header and arrays are 0-indexed
-  await sheets.spreadsheets.values.update({
+  await sheets.spreadsheets.values.batchUpdate({
     spreadsheetId,
-    range: `${sheetName}!F${rowNumber}`,
-    valueInputOption: 'RAW',
     resource: {
-      values: [[location]],
+      valueInputOption: 'RAW',
+      data: [
+        {
+          range: `${sheetName}!F${rowNumber}`,
+          values: [[location]],
+        },
+        {
+          range: `${sheetName}!L${rowNumber}`,
+          values: [['']],
+        }
+      ],
     },
   });
 }
@@ -219,9 +228,46 @@ async function addBook(bookData) {
   });
 }
 
+/**
+ * Updates the RequestedBy field for a book in the Inventory sheet
+ * @param {string} isbn - Book ISBN
+ * @param {string} requestedBy - Name/location of who requested the book
+ */
+async function requestBook(isbn, requestedBy) {
+  const sheets = getSheetsClient();
+  const spreadsheetId = process.env.SHEET_ID;
+  const sheetName = 'Inventory';
+
+  // Normalize the ISBN for comparison
+  const normalizedIsbn = isbn.toString().trim();
+
+  // Read inventory to find the book
+  const inventory = await readSheet(sheetName);
+  const bookIndex = inventory.findIndex(book => {
+    const bookIsbn = (book.ISBN || book.isbn || '').toString().trim();
+    return bookIsbn === normalizedIsbn;
+  });
+
+  if (bookIndex === -1) {
+    throw new Error(`Book with ISBN ${normalizedIsbn} not found`);
+  }
+
+  // Update the RequestedBy column (column L, 12th column)
+  const rowNumber = bookIndex + 2; // +2 because row 1 is header and arrays are 0-indexed
+  await sheets.spreadsheets.values.update({
+    spreadsheetId,
+    range: `${sheetName}!L${rowNumber}`,
+    valueInputOption: 'RAW',
+    resource: {
+      values: [[requestedBy]],
+    },
+  });
+}
+
 module.exports = {
   readSheet,
   updateLocation,
+  requestBook,
   getValidationRules,
   addBook,
 };

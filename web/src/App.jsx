@@ -2,8 +2,9 @@ import React, { useState, useRef } from 'react';
 import { BrowserMultiFormatReader } from '@zxing/library';
 import BookList from './BookList';
 import CheckoutModal from './CheckoutModal';
+import RequestModal from './RequestModal';
 import AddBookModal from './AddBookModal';
-import { getBooks, checkoutBook } from './api';
+import { getBooks, checkoutBook, requestBook } from './api';
 import logo from './logo.png';
 
 function App() {
@@ -11,6 +12,8 @@ function App() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
   const [selectedBook, setSelectedBook] = useState(null);
+  const [showRequestModal, setShowRequestModal] = useState(false);
+  const [selectedRequestBook, setSelectedRequestBook] = useState(null);
   const [showAddBook, setShowAddBook] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedNotesFilters, setSelectedNotesFilters] = useState([]);
@@ -70,6 +73,18 @@ function App() {
   async function handleAddBook() {
     await loadBooks();
     setShowAddBook(false);
+  }
+
+  async function handleRequest(isbn, requestedBy) {
+    try {
+      await requestBook(isbn, requestedBy);
+      await loadBooks();
+      setShowRequestModal(false);
+      setSelectedRequestBook(null);
+    } catch (err) {
+      alert('Failed to request book. Please try again.');
+      console.error(err);
+    }
   }
 
   async function startCheckoutScanning() {
@@ -233,7 +248,7 @@ function App() {
             style={{ 
               maxWidth: '100%', 
               height: 'auto', 
-              maxHeight: '120px',
+              maxHeight: '300px',
               marginBottom: '8px'
             }} 
           />
@@ -320,7 +335,7 @@ function App() {
           </button>
         </div>
         
-        <div style={{ marginTop: '20px' }}>
+        <div style={{ marginTop: '20px', display: 'flex', justifyContent: 'center' }}>
           <input
             type="text"
             placeholder="Search by title, author, ISBN, or location..."
@@ -529,7 +544,11 @@ function App() {
       ) : (
         <BookList 
           books={sortedBooks} 
-          onCheckoutClick={(book) => setSelectedBook(book)} 
+          onCheckoutClick={(book) => setSelectedBook(book)}
+          onRequestClick={(book) => {
+            setSelectedRequestBook(book);
+            setShowRequestModal(true);
+          }}
         />
       )}
 
@@ -636,6 +655,17 @@ function App() {
           book={selectedBook}
           onClose={() => setSelectedBook(null)}
           onSubmit={handleCheckout}
+        />
+      )}
+
+      {showRequestModal && selectedRequestBook && (
+        <RequestModal
+          book={selectedRequestBook}
+          onClose={() => {
+            setShowRequestModal(false);
+            setSelectedRequestBook(null);
+          }}
+          onSubmit={handleRequest}
         />
       )}
 

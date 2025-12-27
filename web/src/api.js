@@ -57,3 +57,24 @@ export async function addBook(bookData) {
   
   return response.json();
 }
+
+export async function requestBook(isbn, requestedBy) {
+  const response = await fetch(`${API_BASE}/requestBook`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({ isbn, requestedBy }),
+  });
+  
+  if (!response.ok) {
+    try {
+      const error = await response.json();
+      throw new Error(error.error || 'Failed to request book');
+    } catch (e) {
+      throw new Error(`Failed to request book (${response.status}: ${response.statusText})`);
+    }
+  }
+  
+  return response.json();
+}

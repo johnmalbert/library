@@ -35,6 +35,7 @@ app.http('getBooks', {
           language: (book.Language || '').trim(),
           notes: (book.Notes || '').trim(),
           location: (book.Location || '').trim(),
+          requestedBy: (book.RequestedBy || book.requestedBy || '').trim(),
         };
       });
 
