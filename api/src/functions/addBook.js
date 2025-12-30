@@ -10,10 +10,11 @@ app.http('addBook', {
       const body = await request.json();
       const { isbn, cover, title, authors, readingLevel, location, publishers, pages, genres, language, notes } = body;
 
-      if (!isbn || !location) {
+      // Require title, authors, and location for manual entries
+      if (!title || !authors || !location) {
         return {
           status: 400,
-          jsonBody: { error: 'ISBN and Location are required fields' },
+          jsonBody: { error: 'Title, Author, and Location are required fields' },
         };
       }
 

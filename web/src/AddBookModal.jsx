@@ -15,6 +15,13 @@ function AddBookModal({ onClose, onSuccess }) {
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState('');
   const [scanning, setScanning] = useState(false);
+  const [manualEntry, setManualEntry] = useState(false);
+  const [manualData, setManualData] = useState({
+    title: '',
+    authors: '',
+    pages: '',
+    genres: '',
+  });
   const videoRef = useRef(null);
   const codeReaderRef = useRef(null);
 
@@ -117,35 +124,75 @@ function AddBookModal({ onClose, onSuccess }) {
     await handleLookupWithIsbn();
   }
 
+  function handleManualEntry() {
+    setManualEntry(true);
+    setError('');
+  }
+
   async function handleSubmit(e) {
     e.preventDefault();
     
-    if (!bookInfo) {
-      setError('Please lookup the book first');
-      return;
-    }
+    // Validate manual entry mode
+    if (manualEntry) {
+      if (!manualData.title.trim()) {
+        setError('Title is required');
+        return;
+      }
+      if (!manualData.authors.trim()) {
+        setError('Author is required');
+        return;
+      }
+      if (!location.trim()) {
+        setError('Location is required');
+        return;
+      }
+    } else {
+      // Validate API lookup mode
+      if (!bookInfo) {
+        setError('Please lookup the book first');
+        return;
+      }
 
-    if (!location.trim()) {
-      setError('Location is required');
-      return;
+      if (!location.trim()) {
+        setError('Location is required');
+        return;
+      }
     }
 
     setError('');
     setSubmitting(true);
     try {
-      await addBook({
-        isbn: bookInfo.isbn,
-        cover: bookInfo.cover,
-        title: bookInfo.title,
-        authors: bookInfo.authors,
-        readingLevel: readingLevel,
-        location: location,
-        publishers: bookInfo.publishers,
-        pages: bookInfo.pages,
-        genres: bookInfo.genres,
-        language: bookInfo.language,
-        notes: notes,
-      });
+      if (manualEntry) {
+        // Submit manually entered book with the scanned/entered ISBN
+        await addBook({
+          isbn: isbn.trim(),
+          cover: '',
+          title: manualData.title.trim(),
+          authors: manualData.authors.trim(),
+          readingLevel: readingLevel,
+          location: location,
+          publishers: '',
+          pages: manualData.pages.trim(),
+          genres: manualData.genres.trim(),
+          language: '',
+          notes: notes,
+        });
+      } else {
+        // Submit book from API lookup
+        await addBook({
+          isbn: bookInfo.isbn,
+          cover: bookInfo.cover,
+          title: bookInfo.title,
+          authors: bookInfo.authors,
+          readingLevel: readingLevel,
+          location: location,
+          publishers: bookInfo.publishers,
+          pages: bookInfo.pages,
+          genres: bookInfo.genres,
+          language: bookInfo.language,
+          notes: notes,
+        });
+      }
       onSuccess();
     } catch (err) {
       setError(err.message);
@@ -191,15 +238,37 @@ function AddBookModal({ onClose, onSuccess }) {
             fontSize: '14px',
           }}>
             {error}
+            {/* Show manual entry button only on "Book not found" error and not already in manual mode */}
+            {error.includes('Book not found') && !manualEntry && (
+              <div style={{ marginTop: '10px' }}>
+                <button
+                  type="button"
+                  onClick={handleManualEntry}
+                  style={{
+                    padding: '8px 16px',
+                    backgroundColor: '#17a2b8',
+                    color: 'white',
+                    border: 'none',
+                    borderRadius: '4px',
+                    cursor: 'pointer',
+                    fontSize: '14px',
+                    fontWeight: 'bold',
+                  }}
+                >
+                  Enter Book Details Manually
+                </button>
+              </div>
+            )}
           </div>
         )}
 
         <form onSubmit={handleSubmit}>
-          {/* ISBN Input and Lookup */}
-          <div style={{ marginBottom: '15px' }}>
-            <label style={{ display: 'block', marginBottom: '5px', fontWeight: 'bold' }}>
-              ISBN: *
-            </label>
+          {/* ISBN Input and Lookup - Only show if not in manual entry mode */}
+          {!manualEntry && (
+            <div style={{ marginBottom: '15px' }}>
+              <label style={{ display: 'block', marginBottom: '5px', fontWeight: 'bold' }}>
+                ISBN: *
+              </label>
             
             {scanning ? (
               <div style={{ marginBottom: '10px' }}>
@@ -295,6 +364,112 @@ function AddBookModal({ onClose, onSuccess }) {
               </>
             )}
           </div>
+          )}
+
+          {/* Manual Entry Form */}
+          {manualEntry && (
+            <>
+              <div style={{
+                padding: '15px',
+                backgroundColor: '#e7f3ff',
+                borderRadius: '4px',
+                marginBottom: '15px',
+                border: '2px solid #17a2b8',
+              }}>
+                <h3 style={{ marginTop: 0, marginBottom: '10px', fontSize: '16px', color: '#17a2b8' }}>
+                  Manual Entry Mode
+                </h3>
+                <p style={{ margin: 0, fontSize: '14px', color: '#666' }}>
+                  {isbn && <><strong>ISBN:</strong> {isbn}<br /></>}
+                  Enter the book details manually below.
+                </p>
+              </div>
+
+              {/* Title */}
+              <div style={{ marginBottom: '15px' }}>
+                <label style={{ display: 'block', marginBottom: '5px', fontWeight: 'bold' }}>
+                  Title: *
+                </label>
+                <input
+                  type="text"
+                  value={manualData.title}
+                  onChange={(e) => setManualData({ ...manualData, title: e.target.value })}
+                  placeholder="Enter book title"
+                  style={{
+                    width: '100%',
+                    padding: '8px',
+                    border: '1px solid #ddd',
+                    borderRadius: '4px',
+                    fontSize: '14px',
+                    boxSizing: 'border-box',
+                  }}
+                />
+              </div>
+
+              {/* Author */}
+              <div style={{ marginBottom: '15px' }}>
+                <label style={{ display: 'block', marginBottom: '5px', fontWeight: 'bold' }}>
+                  Author: *
+                </label>
+                <input
+                  type="text"
+                  value={manualData.authors}
+                  onChange={(e) => setManualData({ ...manualData, authors: e.target.value })}
+                  placeholder="Enter author name(s)"
+                  style={{
+                    width: '100%',
+                    padding: '8px',
+                    border: '1px solid #ddd',
+                    borderRadius: '4px',
+                    fontSize: '14px',
+                    boxSizing: 'border-box',
+                  }}
+                />
+              </div>
+
+              {/* Pages (Optional) */}
+              <div style={{ marginBottom: '15px' }}>
+                <label style={{ display: 'block', marginBottom: '5px', fontWeight: 'bold' }}>
+                  Pages:
+                </label>
+                <input
+                  type="text"
+                  value={manualData.pages}
+                  onChange={(e) => setManualData({ ...manualData, pages: e.target.value })}
+                  placeholder="Number of pages (optional)"
+                  style={{
+                    width: '100%',
+                    padding: '8px',
+                    border: '1px solid #ddd',
+                    borderRadius: '4px',
+                    fontSize: '14px',
+                    boxSizing: 'border-box',
+                  }}
+                />
+              </div>
+
+              {/* Genre (Optional) */}
+              <div style={{ marginBottom: '15px' }}>
+                <label style={{ display: 'block', marginBottom: '5px', fontWeight: 'bold' }}>
+                  Genre:
+                </label>
+                <input
+                  type="text"
+                  value={manualData.genres}
+                  onChange={(e) => setManualData({ ...manualData, genres: e.target.value })}
+                  placeholder="Genre or category (optional)"
+                  style={{
+                    width: '100%',
+                    padding: '8px',
+                    border: '1px solid #ddd',
+                    borderRadius: '4px',
+                    fontSize: '14px',
+                    boxSizing: 'border-box',
+                  }}
+                />
+              </div>
+            </>
+          )}
 
           {/* Book Information Display */}
           {bookInfo && (
@@ -352,8 +527,8 @@ function AddBookModal({ onClose, onSuccess }) {
             </div>
           )}
 
-          {/* Location - Only show if book is found */}
-          {bookInfo && (
+          {/* Location - Show if book is found OR in manual entry mode */}
+          {(bookInfo || manualEntry) && (
             <>
               <div style={{ marginBottom: '15px' }}>
                 <label style={{ display: 'block', marginBottom: '5px', fontWeight: 'bold' }}>
@@ -446,7 +621,7 @@ function AddBookModal({ onClose, onSuccess }) {
 
           {/* Action Buttons */}
           <div style={{ display: 'flex', gap: '10px' }}>
-            {bookInfo && (
+            {(bookInfo || manualEntry) && (
               <button
                 type="submit"
                 disabled={submitting}
@@ -470,7 +645,7 @@ function AddBookModal({ onClose, onSuccess }) {
               onClick={onClose}
               disabled={submitting}
               style={{
-                flex: bookInfo ? 1 : 2,
+                flex: (bookInfo || manualEntry) ? 1 : 2,
                 padding: '10px',
                 backgroundColor: '#6c757d',
                 color: 'white',
