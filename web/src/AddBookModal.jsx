@@ -3,12 +3,11 @@ import { BrowserMultiFormatReader } from '@zxing/library';
 import { lookupBook, addBook, getLocations } from './api';
 import noImage from './no-image-available.png';
 
-function AddBookModal({ onClose, onSuccess }) {
+function AddBookModal({ onClose, onSuccess, library = 'Inventory' }) {
   const [isbn, setIsbn] = useState('');
   const [bookInfo, setBookInfo] = useState(null);
   const [location, setLocation] = useState('');
   const [notes, setNotes] = useState('');
-  const [readingLevel, setReadingLevel] = useState('');
   const [locations, setLocations] = useState([]);
   const [loadingLocations, setLoadingLocations] = useState(true);
   const [lookingUp, setLookingUp] = useState(false);
@@ -28,7 +27,7 @@ function AddBookModal({ onClose, onSuccess }) {
   useEffect(() => {
     async function fetchLocations() {
       try {
-        const data = await getLocations();
+        const data = await getLocations(library);
         setLocations(data);
       } catch (error) {
         console.error('Failed to load locations:', error);
@@ -37,7 +36,7 @@ function AddBookModal({ onClose, onSuccess }) {
       }
     }
     fetchLocations();
-  }, []);
+  }, [library]);
 
   useEffect(() => {
     // Cleanup barcode reader on unmount
@@ -169,14 +168,14 @@ function AddBookModal({ onClose, onSuccess }) {
           cover: '',
           title: manualData.title.trim(),
           authors: manualData.authors.trim(),
-          readingLevel: readingLevel,
+          readingLevel: '',
           location: location,
           publishers: '',
           pages: manualData.pages.trim(),
           genres: manualData.genres.trim(),
           language: '',
           notes: notes,
-        });
+        }, library);
       } else {
         // Submit book from API lookup
         await addBook({
@@ -184,14 +183,14 @@ function AddBookModal({ onClose, onSuccess }) {
           cover: bookInfo.cover,
           title: bookInfo.title,
           authors: bookInfo.authors,
-          readingLevel: readingLevel,
+          readingLevel: '',
           location: location,
           publishers: bookInfo.publishers,
           pages: bookInfo.pages,
           genres: bookInfo.genres,
           language: bookInfo.language,
           notes: notes,
-        });
+        }, library);
       }
       onSuccess();
     } catch (err) {
@@ -571,27 +570,6 @@ function AddBookModal({ onClose, onSuccess }) {
                     }}
                   />
                 )}
-              </div>
-
-              {/* Reading Level */}
-              <div style={{ marginBottom: '15px' }}>
-                <label style={{ display: 'block', marginBottom: '5px', fontWeight: 'bold' }}>
-                  Reading Level:
-                </label>
-                <input
-                  type="text"
-                  value={readingLevel}
-                  onChange={(e) => setReadingLevel(e.target.value)}
-                  placeholder="e.g., K-2, 3-5, 6-8"
-                  style={{
-                    width: '100%',
-                    padding: '8px',
-                    border: '1px solid #ddd',
-                    borderRadius: '4px',
-                    fontSize: '14px',
-                    boxSizing: 'border-box',
-                  }}
-                />
               </div>
 
               {/* Notes */}

@@ -10,7 +10,7 @@ app.http('requestBook', {
 
     try {
       const body = await request.json();
-      const { isbn, requestedBy } = body;
+      const { isbn, requestedBy, sheetName = 'Inventory' } = body;
 
       if (!isbn || !requestedBy) {
         return {
@@ -19,7 +19,7 @@ app.http('requestBook', {
         };
       }
 
-      await requestBookSheet(isbn, requestedBy);
+      await requestBookSheet(isbn, requestedBy, sheetName);
 
       return {
         status: 200,

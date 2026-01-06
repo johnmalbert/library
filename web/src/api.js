@@ -1,20 +1,20 @@
 const API_BASE = '/api';
 
-export async function getBooks() {
-  const response = await fetch(`${API_BASE}/getBooks`);
+export async function getBooks(sheetName = 'Inventory') {
+  const response = await fetch(`${API_BASE}/getBooks?sheetName=${encodeURIComponent(sheetName)}`);
   if (!response.ok) {
     throw new Error('Failed to fetch books');
   }
   return response.json();
 }
 
-export async function checkoutBook(isbn, newLocation) {
+export async function checkoutBook(isbn, newLocation, sheetName = 'Inventory') {
   const response = await fetch(`${API_BASE}/checkoutBook`, {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
     },
-    body: JSON.stringify({ isbn, newLocation }),
+    body: JSON.stringify({ isbn, newLocation, sheetName }),
   });
   
   if (!response.ok) {
@@ -24,8 +24,8 @@ export async function checkoutBook(isbn, newLocation) {
   return response.json();
 }
 
-export async function getLocations() {
-  const response = await fetch(`${API_BASE}/getLocations`);
+export async function getLocations(sheetName = 'Inventory') {
+  const response = await fetch(`${API_BASE}/getLocations?sheetName=${encodeURIComponent(sheetName)}`);
   if (!response.ok) {
     throw new Error('Failed to fetch locations');
   }
@@ -41,13 +41,13 @@ export async function lookupBook(isbn) {
   return response.json();
 }
 
-export async function addBook(bookData) {
+export async function addBook(bookData, sheetName = 'Inventory') {
   const response = await fetch(`${API_BASE}/addBook`, {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
     },
-    body: JSON.stringify(bookData),
+    body: JSON.stringify({ ...bookData, sheetName }),
   });
   
   if (!response.ok) {
@@ -58,13 +58,13 @@ export async function addBook(bookData) {
   return response.json();
 }
 
-export async function requestBook(isbn, requestedBy) {
+export async function requestBook(isbn, requestedBy, sheetName = 'Inventory') {
   const response = await fetch(`${API_BASE}/requestBook`, {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
     },
-    body: JSON.stringify({ isbn, requestedBy }),
+    body: JSON.stringify({ isbn, requestedBy, sheetName }),
   });
   
   if (!response.ok) {

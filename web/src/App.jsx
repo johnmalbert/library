@@ -8,6 +8,7 @@ import { getBooks, checkoutBook, requestBook } from './api';
 import logo from './logo.png';
 
 function App() {
+  const [library, setLibrary] = useState('Inventory'); // 'Inventory' or 'Adult Inventory'
   const [books, setBooks] = useState([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
@@ -16,9 +17,7 @@ function App() {
   const [selectedRequestBook, setSelectedRequestBook] = useState(null);
   const [showAddBook, setShowAddBook] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
-  const [selectedNotesFilters, setSelectedNotesFilters] = useState([]);
   const [selectedLocationFilters, setSelectedLocationFilters] = useState([]);
-  const [showNotesFilter, setShowNotesFilter] = useState(false);
   const [showLocationFilter, setShowLocationFilter] = useState(false);
   const [showScrollTop, setShowScrollTop] = useState(false);
   const [scanningCheckout, setScanningCheckout] = useState(false);
@@ -28,7 +27,7 @@ function App() {
 
   React.useEffect(() => {
     loadBooks();
-  }, []);
+  }, [library]);
 
   React.useEffect(() => {
     const handleScroll = () => {
@@ -49,7 +48,7 @@ function App() {
     setLoading(true);
     setError(null);
     try {
-      const data = await getBooks();
+      const data = await getBooks(library);
       setBooks(data);
     } catch (err) {
       setError('Failed to load books. Please try again.');
@@ -61,7 +60,7 @@ function App() {
 
   async function handleCheckout(isbn, newLocation) {
     try {
-      await checkoutBook(isbn, newLocation);
+      await checkoutBook(isbn, newLocation, library);
       await loadBooks();
       setSelectedBook(null);
     } catch (err) {
@@ -77,7 +76,7 @@ function App() {
 
   async function handleRequest(isbn, requestedBy) {
     try {
-      await requestBook(isbn, requestedBy);
+      await requestBook(isbn, requestedBy, library);
       await loadBooks();
       setShowRequestModal(false);
       setSelectedRequestBook(null);
@@ -158,18 +157,6 @@ function App() {
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
-  // Get unique notes values for filter options
-  const uniqueNotes = React.useMemo(() => {
-    const notesSet = new Set();
-    books.forEach(book => {
-      const notes = (book.notes || '').trim();
-      if (notes) {
-        notesSet.add(notes);
-      }
-    });
-    return Array.from(notesSet).sort();
-  }, [books]);
-
   // Get unique locations for filter options
   const uniqueLocations = React.useMemo(() => {
     const locationSet = new Set();
@@ -181,15 +168,6 @@ function App() {
     });
     return Array.from(locationSet).sort();
   }, [books]);
-
-  // Toggle notes filter selection
-  const toggleNotesFilter = (notesValue) => {
-    setSelectedNotesFilters(prev => 
-      prev.includes(notesValue)
-        ? prev.filter(v => v !== notesValue)
-        : [...prev, notesValue]
-    );
-  };
 
   // Toggle location filter selection
   const toggleLocationFilter = (locationValue) => {
@@ -210,14 +188,6 @@ function App() {
       const isbn = (book.isbn || '').toLowerCase();
       const location = (book.location || '').toLowerCase();
       if (!title.includes(query) && !authors.includes(query) && !isbn.includes(query) && !location.includes(query)) {
-        return false;
-      }
-    }
-
-    // Notes filter
-    if (selectedNotesFilters.length > 0) {
-      const bookNotes = (book.notes || '').trim();
-      if (!selectedNotesFilters.includes(bookNotes)) {
         return false;
       }
     }
@@ -253,6 +223,47 @@ function App() {
             }} 
           />
           <p style={{ color: '#7f8c8d', fontSize: 'clamp(0.9rem, 3vw, 1.1rem)', margin: '0 0 20px 0' }}>Discover and explore our collection of children's books</p>
+        </div>
+        
+        {/* Library selector */}
+        <div style={{
+          display: 'flex',
+          justifyContent: 'center',
+          marginBottom: '20px',
+          gap: '10px',
+        }}>
+          <button
+            onClick={() => setLibrary('Inventory')}
+            style={{
+              padding: '12px 24px',
+              fontSize: '16px',
+              fontWeight: 'bold',
+              border: '2px solid #007bff',
+              borderRadius: '8px',
+              cursor: 'pointer',
+              backgroundColor: library === 'Inventory' ? '#007bff' : 'white',
+              color: library === 'Inventory' ? 'white' : '#007bff',
+              transition: 'all 0.2s',
+            }}
+          >
+            📚 Children's Library
+          </button>
+          <button
+            onClick={() => setLibrary('Adult Inventory')}
+            style={{
+              padding: '12px 24px',
+              fontSize: '16px',
+              fontWeight: 'bold',
+              border: '2px solid #6f42c1',
+              borderRadius: '8px',
+              cursor: 'pointer',
+              backgroundColor: library === 'Adult Inventory' ? '#6f42c1' : 'white',
+              color: library === 'Adult Inventory' ? 'white' : '#6f42c1',
+              transition: 'all 0.2s',
+            }}
+          >
+            📖 Adult Library
+          </button>
         </div>
         
         {/* Action buttons - centered and responsive */}
@@ -356,88 +367,6 @@ function App() {
           />
         </div>
 
-        {uniqueNotes.length > 0 && (
-          <div style={{ marginTop: '15px' }}>
-            <div
-              onClick={() => setShowNotesFilter(!showNotesFilter)}
-              style={{
-                display: 'flex',
-                alignItems: 'center',
-                gap: '8px',
-                cursor: 'pointer',
-                padding: '10px 12px',
-                backgroundColor: '#f8f9fa',
-                borderRadius: '6px',
-                border: '1px solid #ddd',
-                marginBottom: showNotesFilter ? '12px' : '0',
-                transition: 'background-color 0.2s',
-              }}
-              onMouseOver={(e) => e.currentTarget.style.backgroundColor = '#e9ecef'}
-              onMouseOut={(e) => e.currentTarget.style.backgroundColor = '#f8f9fa'}
-            >
-              <span style={{ fontSize: '18px', fontWeight: 'bold', color: '#007bff' }}>
-                {showNotesFilter ? '▼' : '▶'}
-              </span>
-              <label style={{ fontSize: '14px', fontWeight: '500', color: '#555', margin: 0, cursor: 'pointer' }}>
-                Filter by Reading Level
-                {selectedNotesFilters.length > 0 && (
-                  <span style={{ marginLeft: '8px', fontSize: '12px', color: '#007bff', fontWeight: 'bold' }}>
-                    ({selectedNotesFilters.length} selected)
-                  </span>
-                )}
-              </label>
-            </div>
-            {showNotesFilter && (
-              <>
-                <div style={{ display: 'flex', gap: '15px', flexWrap: 'wrap' }}>
-                  {uniqueNotes.map(notesValue => (
-                    <label
-                      key={notesValue}
-                      style={{
-                        display: 'flex',
-                        alignItems: 'center',
-                        gap: '6px',
-                        cursor: 'pointer',
-                        padding: '8px 12px',
-                        border: '2px solid #ddd',
-                        borderRadius: '6px',
-                        backgroundColor: selectedNotesFilters.includes(notesValue) ? '#e7f3ff' : 'white',
-                        borderColor: selectedNotesFilters.includes(notesValue) ? '#007bff' : '#ddd',
-                        transition: 'all 0.2s',
-                      }}
-                    >
-                      <input
-                        type="checkbox"
-                        checked={selectedNotesFilters.includes(notesValue)}
-                        onChange={() => toggleNotesFilter(notesValue)}
-                        style={{ cursor: 'pointer' }}
-                      />
-                      <span style={{ fontSize: '14px', color: '#333' }}>{notesValue}</span>
-                    </label>
-                  ))}
-                </div>
-                {selectedNotesFilters.length > 0 && (
-                  <button
-                    onClick={() => setSelectedNotesFilters([])}
-                    style={{
-                      marginTop: '10px',
-                      padding: '6px 12px',
-                      fontSize: '13px',
-                      backgroundColor: '#f8f9fa',
-                      border: '1px solid #ddd',
-                      borderRadius: '4px',
-                      cursor: 'pointer',
-                      color: '#666',
-                    }}
-                  >
-                    Clear Reading Level Filters
-                  </button>
-                )}
-              </>
-            )}
-          </div>
-        )}
-
         {uniqueLocations.length > 0 && (
           <div style={{ marginTop: '15px' }}>
             <div
@@ -520,7 +449,7 @@ function App() {
           </div>
         )}
 
-        {(searchQuery || selectedNotesFilters.length > 0 || selectedLocationFilters.length > 0) && (
+        {(searchQuery || selectedLocationFilters.length > 0) && (
           <p style={{ marginTop: '10px', fontSize: '14px', color: '#666' }}>
             Found {filteredBooks.length} book{filteredBooks.length !== 1 ? 's' : ''}
           </p>
@@ -673,6 +602,7 @@ function App() {
         <AddBookModal
           onClose={() => setShowAddBook(false)}
           onSuccess={handleAddBook}
+          library={library}
         />
       )}
     </div>

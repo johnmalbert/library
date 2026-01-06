@@ -8,7 +8,7 @@ app.http('checkoutBook', {
   handler: async (request, context) => {
     try {
       const body = await request.json();
-      const { isbn, newLocation } = body;
+      const { isbn, newLocation, sheetName = 'Inventory' } = body;
 
       if (!isbn || !newLocation) {
         return {
@@ -17,7 +17,7 @@ app.http('checkoutBook', {
         };
       }
 
-      await updateLocation(isbn, newLocation);
+      await updateLocation(isbn, newLocation, sheetName);
 
       return {
         status: 200,

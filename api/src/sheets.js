@@ -71,11 +71,11 @@ async function readSheet(sheetName) {
  * Also clears the RequestedBy column when moving
  * @param {string} isbn - Book ISBN
  * @param {string} location - New location
+ * @param {string} sheetName - Name of the sheet (e.g., 'Inventory' or 'Adult Inventory')
  */
-async function updateLocation(isbn, location) {
+async function updateLocation(isbn, location, sheetName = 'Inventory') {
   const sheets = getSheetsClient();
   const spreadsheetId = process.env.SHEET_ID;
-  const sheetName = 'Inventory';
 
   // Normalize the ISBN for comparison
   const normalizedIsbn = isbn.toString().trim();
@@ -175,11 +175,11 @@ async function getValidationRules(sheetName, columnLetter) {
 /**
  * Adds a new book to the Inventory sheet
  * @param {Object} bookData - Book data with ISBN, Cover, Title, Authors, Reading Level, Location, Publishers, Pages, Genres, Language, Notes
+ * @param {string} sheetName - Name of the sheet (e.g., 'Inventory' or 'Adult Inventory')
  */
-async function addBook(bookData) {
+async function addBook(bookData, sheetName = 'Inventory') {
   const sheets = getSheetsClient();
   const spreadsheetId = process.env.SHEET_ID;
-  const sheetName = 'Inventory';
 
   // Normalize ISBN for comparison
   const normalizedIsbn = (bookData.isbn || '').toString().trim();
@@ -232,11 +232,11 @@ async function addBook(bookData) {
  * Updates the RequestedBy field for a book in the Inventory sheet
  * @param {string} isbn - Book ISBN
  * @param {string} requestedBy - Name/location of who requested the book
+ * @param {string} sheetName - Name of the sheet (e.g., 'Inventory' or 'Adult Inventory')
  */
-async function requestBook(isbn, requestedBy) {
+async function requestBook(isbn, requestedBy, sheetName = 'Inventory') {
   const sheets = getSheetsClient();
   const spreadsheetId = process.env.SHEET_ID;
-  const sheetName = 'Inventory';
 
   // Normalize the ISBN for comparison
   const normalizedIsbn = isbn.toString().trim();

@@ -8,8 +8,11 @@ app.http('getLocations', {
     context.log('Fetching location validation rules');
 
     try {
+      // Get sheetName from query parameters, default to 'Inventory'
+      const sheetName = request.query.get('sheetName') || 'Inventory';
+      
       // Location column is the 6th column (F) in the Inventory sheet
-      const locations = await getValidationRules('Inventory', 'F');
+      const locations = await getValidationRules(sheetName, 'F');
       
       return {
         status: 200,

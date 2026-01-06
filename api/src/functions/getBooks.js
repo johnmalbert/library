@@ -7,8 +7,11 @@ app.http('getBooks', {
   route: 'getBooks',
   handler: async (request, context) => {
     try {
+      // Get sheetName from query parameters, default to 'Inventory'
+      const sheetName = request.query.get('sheetName') || 'Inventory';
+      
       // Read inventory sheet
-      const inventory = await readSheet('Inventory');
+      const inventory = await readSheet(sheetName);
 
       // Map inventory to book objects
       const books = inventory.map(book => {
