@@ -15,8 +15,10 @@ app.http('lookupBook', {
         };
       }
 
-      // Call Google Books API
-      const response = await fetch(`https://www.googleapis.com/books/v1/volumes?q=isbn:${isbn}`);
+      // Call Google Books API (with optional API key for higher rate limits)
+      const apiKey = process.env.GOOGLE_BOOKS_API_KEY;
+      const url = `https://www.googleapis.com/books/v1/volumes?q=isbn:${isbn}${apiKey ? `&key=${apiKey}` : ''}`;
+      const response = await fetch(url);
       
       if (!response.ok) {
         throw new Error('Failed to fetch from Google Books API');
@@ -25,9 +27,10 @@ app.http('lookupBook', {
       const data = await response.json();
 
       if (!data.items || data.items.length === 0) {
+        context.log(`Book not found for ISBN: ${isbn}. API response:`, JSON.stringify(data));
         return {
           status: 404,
-          jsonBody: { error: 'Book not found' },
+          jsonBody: { error: 'Book not found', isbn: isbn, hint: 'Try the ISBN-13 (13 digits starting with 978 or 979) if you used ISBN-10, or vice versa' },
         };
       }
 
