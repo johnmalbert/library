@@ -505,6 +505,30 @@ function AddBookModal({ onClose, onSuccess, library = 'Inventory' }) {
                   </p>
                 </div>
               </div>
+
+              { /* Add Cover Photo button - Show if no image was available from lookup result */
+                !bookInfo.cover && <>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      /* TODO: add handler */
+                    }}
+                    style={{
+                      padding: '6px 12px',
+                      marginBottom: '12px',
+                      backgroundColor: '#28a745',
+                      color: 'white',
+                      border: 'none',
+                      borderRadius: '4px',
+                      cursor: 'pointer',
+                      fontSize: '12px',
+                    }}
+                  >
+                    Add Cover Photo
+                  </button>
+                  <br />
+                </>
+              }
               <button
                 type="button"
                 onClick={() => {
