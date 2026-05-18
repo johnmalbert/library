@@ -23,6 +23,8 @@ function AddBookModal({ onClose, onSuccess, library = 'Inventory' }) {
   });
   const videoRef = useRef(null);
   const codeReaderRef = useRef(null);
+  const [customBookCover, setCustomBookCover] = useState(null);
+  const fileInputRef = useRef(null); // Used to add a photo using a hidden input
 
   useEffect(() => {
     async function fetchLocations() {
@@ -128,6 +130,21 @@ function AddBookModal({ onClose, onSuccess, library = 'Inventory' }) {
     setError('');
   }
 
+  async function handleCapture(e) {
+    const file = e.target.files[0];
+    if (file) {
+      const reader = new FileReader();
+      reader.onloadend = async () => {
+        // Convert image blob to string
+        const largeImageString = reader.result;
+        // Shrink the image down to store in Google Sheets
+        const smallImageString = await resizeImage(largeImageString);
+        setCustomBookCover(smallImageString);
+      };
+      reader.readAsDataURL(file);
+    }
+  };
+
   async function handleSubmit(e) {
     e.preventDefault();
     
@@ -180,7 +197,7 @@ function AddBookModal({ onClose, onSuccess, library = 'Inventory' }) {
         // Submit book from API lookup
         await addBook({
           isbn: bookInfo.isbn,
-          cover: bookInfo.cover,
+          cover: customBookCover || bookInfo.cover,
           title: bookInfo.title,
           authors: bookInfo.authors,
           readingLevel: '',
@@ -480,13 +497,13 @@ function AddBookModal({ onClose, onSuccess, library = 'Inventory' }) {
             }}>
               <div style={{ display: 'flex', gap: '15px', marginBottom: '10px' }}>
                 <img
-                  src={bookInfo.cover || noImage}
+                  src={customBookCover || bookInfo.cover || noImage} // prefer custom photo
                   alt={bookInfo.title}
                   style={{
                     width: '80px',
                     height: '120px',
                     objectFit: 'cover',
-                    borderRadius: '4px',
+                    borderRadius: '4px'
                   }}
                   onError={(e) => {
                     e.target.src = noImage;
@@ -505,6 +522,38 @@ function AddBookModal({ onClose, onSuccess, library = 'Inventory' }) {
                   </p>
                 </div>
               </div>
+
+              {/* Add Cover Photo button - Show if no image was available from lookup result */}
+              {!bookInfo.cover && <>
+                <button
+                  type="button"
+                  onClick={() => fileInputRef.current?.click()}
+                  style={{
+                    padding: '6px 12px',
+                    marginBottom: '12px',
+                    backgroundColor: '#28a745',
+                    color: 'white',
+                    border: 'none',
+                    borderRadius: '4px',
+                    cursor: 'pointer',
+                    fontSize: '12px',
+                  }}
+                >
+                  {customBookCover ? '📷 Retake Photo' : '📷 Add Cover Photo'}
+                </button>
+                <br />
+
+                {/* Hidden File Input */}
+                <input
+                  type="file"
+                  ref={fileInputRef}
+                  accept="image/*"
+                  capture="environment" // Opens back camera on mobile
+                  onChange={handleCapture}
+                  style={{ display: 'none' }}
+                />
+              </>}
+
               <button
                 type="button"
                 onClick={() => {
@@ -641,5 +690,26 @@ function AddBookModal({ onClose, onSuccess, library = 'Inventory' }) {
     </div>
   );
 }
+
+/* Resizes the cover photo image to thumbnail size */
+const resizeImage = (base64Str) => {
+  return new Promise((resolve) => {
+    const img = new Image();
+    img.src = base64Str;
+    img.onload = () => {
+      const canvas = document.createElement('canvas');
+      const MAX_WIDTH = 150;
+      const scaleSize = MAX_WIDTH / img.width;
+      canvas.width = MAX_WIDTH;
+      canvas.height = img.height * scaleSize;
+
+      const ctx = canvas.getContext('2d');
+      ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+      
+      // Convert to compressed JPEG (0.7 quality) to save more space
+      resolve(canvas.toDataURL('image/jpeg', 0.7)); 
+    };
+  });
+};
 
 export default AddBookModal;
