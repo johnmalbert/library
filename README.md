@@ -28,6 +28,7 @@ A simple web app for managing your family's book collection. Books are stored in
    - Create a new service account
    - Create a JSON key and download it
    - Share your Google Sheet with the service account email
+   - Update your local settings with the service account information
 
 ## Local Development Setup
 
