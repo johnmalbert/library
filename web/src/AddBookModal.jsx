@@ -139,7 +139,7 @@ function AddBookModal({ onClose, onSuccess, library = 'Inventory' }) {
         const largeImageString = reader.result;
         // Shrink the image down to store in Google Sheets
         const smallImageString = await resizeImage(largeImageString);
-        setCustomCover(smallImageString);
+        setCustomBookCover(smallImageString);
       };
       reader.readAsDataURL(file);
     }
@@ -527,7 +527,7 @@ function AddBookModal({ onClose, onSuccess, library = 'Inventory' }) {
               {!bookInfo.cover && <>
                 <button
                   type="button"
-                  onClick={() => fileInputRef.current.click()}
+                  onClick={() => fileInputRef.current?.click()}
                   style={{
                     padding: '6px 12px',
                     marginBottom: '12px',
